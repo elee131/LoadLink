@@ -27,6 +27,13 @@ export interface TourStepDef {
   on?: TourPlacement
   /** Route navigated to before the step is shown. */
   path?: string
+  /** Label of a tab to click (inside the target) before the step is shown.
+   *  Used to pre-activate a tab so the step's copy matches what the user sees. */
+  clickLabel?: string
+  /** Label of a link/button inside the target to click before the step is shown.
+   *  Unlike `clickLabel` (a tab), this may navigate to another page — the step
+   *  waits for the destination to mount before anchoring. */
+  clickLinkLabel?: string
 }
 
 /** Closing step — a role-specific "do these things first" checklist. */
@@ -53,7 +60,7 @@ const DRIVER_STEPS: TourStepDef[] = [
     id: 'welcome',
     title: 'Welcome to LoadLink',
     text: `
-      <p>You are signed in as a <strong>driver (carrier)</strong>. LoadLink is a freight marketplace: companies post shipments they need moved, you agree a price, haul it, and get paid.</p>
+      <p>You are signed in as a <strong>driver (carrier)</strong>. LoadLink is a freight marketplace: companies post shipments they need moved, you agree on a price, haul it, and get paid.</p>
       <p>By the end of this walkthrough you will know how to find work, win it, run it, and see whether it actually made money.</p>
     `,
     path: RoutePath.Dashboard,
@@ -111,7 +118,7 @@ const DRIVER_STEPS: TourStepDef[] = [
   },
   {
     id: 'use-location',
-    title: 'Share your location for honest distances',
+    title: 'Share your location',
     text: `
       <p>Turn this on and the board is re-scored from where you actually are: deadhead becomes a real number and the map draws your maximum-deadhead radius (you set that limit in your profile).</p>
       <p>Your exact position is not shown to companies — it is only used to rank loads for you.</p>
@@ -123,7 +130,7 @@ const DRIVER_STEPS: TourStepDef[] = [
     id: 'auction-map',
     title: 'Map, timeline and eligibility detail',
     text: `
-      <p>Selecting a load fills this panel: the driving route with distance and estimated hours, a <strong>Delivery Timeline</strong> of checkpoints between pickup and drop-off, and — with AI enabled — suggested fuel stops and rest areas along the way.</p>
+      <p>Selecting a load fills this panel: the driving route with distance and estimated hours, a <strong>Delivery Timeline</strong> of checkpoints between pickup and drop-off.</p>
       <p>The <strong>Eligibility Details</strong> card spells out every requirement you pass or fail, so a load you cannot take is never a mystery.</p>
     `,
     target: 'auction-map-panel',
@@ -131,11 +138,11 @@ const DRIVER_STEPS: TourStepDef[] = [
   },
   {
     id: 'bidding',
-    title: 'How pricing actually works (read this one)',
+    title: 'How pricing actually works',
     text: `
       <p>The company posts a <strong>starting price</strong> and a cap. The offer <em>creeps upward</em> automatically over time toward that cap until somebody takes the load, and a countdown shows how long the auction stays open.</p>
       <p>You have two ways to win it:</p>
-      <ul style="margin:0.25rem 0 0.5rem 1.1rem;padding:0;list-style:disc;">
+      <ul style="margin:0;padding-left:1.1rem;list-style:disc;">
         <li><strong>Claim load</strong> — take the current price immediately. Fastest, no waiting.</li>
         <li><strong>Place bid</strong> — ask for the current price or more. The company sees all bids ranked cheapest-first and can accept yours; if your number falls inside their auto-accept tolerance it can be accepted automatically.</li>
       </ul>
@@ -162,7 +169,7 @@ const DRIVER_STEPS: TourStepDef[] = [
     title: 'Running a load, day to day',
     text: `
       <p>Click a row to focus it on the map, or hit <strong>Manage</strong> to do the real work:</p>
-      <ul style="margin:0.25rem 0 0.5rem 1.1rem;padding:0;list-style:disc;">
+      <ul style="margin:0;padding-left:1.1rem;list-style:disc;">
         <li><strong>Assign a truck</strong> — which of your trucks is covering it.</li>
         <li><strong>Message the company</strong> — questions, delays, gate codes.</li>
         <li><strong>Move the status</strong> — mark it In Transit when you roll, Completed when it is delivered.</li>
@@ -182,7 +189,7 @@ const DRIVER_STEPS: TourStepDef[] = [
   },
   {
     id: 'nav-revenue',
-    title: 'Revenue Center: did you actually make money?',
+    title: 'Revenue Center',
     text: `
       <p>A load that pays well can still lose money once fuel, insurance and maintenance are counted. This page does that maths for you.</p>
       <p>The <strong>Completed</strong> tab is money earned; <strong>Potential Revenue</strong> projects what your booked and in-transit loads will pay.</p>
@@ -307,7 +314,7 @@ const COMPANY_STEPS: TourStepDef[] = [
     title: 'Welcome to LoadLink',
     text: `
       <p>You are signed in as a <strong>company (shipper)</strong>. You post freight that needs moving, drivers compete for it, and you choose the price you are happy with.</p>
-      <p>By the end of this walkthroughyou will be able to post a load, run its auction, award it, and track it to delivery.</p>
+      <p>By the end of this walkthrough you will be able to post a load, run its auction, award it, and track it to delivery.</p>
     `,
     path: RoutePath.CompanyDashboard,
   },
@@ -359,7 +366,7 @@ const COMPANY_STEPS: TourStepDef[] = [
   {
     id: 'loads-map',
     title: 'Where your freight is',
-    text: `<p>All of your routes on one map, colour-coded by status and updated when drivers send GPS check-ins — so you can answer "where is my shipment?" without phoning anyone.</p>`,
+    text: `<p>All of your routes on one map, colour-coded by status.</p>`,
     target: 'loads-map',
     on: 'top',
   },
@@ -369,6 +376,7 @@ const COMPANY_STEPS: TourStepDef[] = [
     text: `<p>Switch to <strong>Spending Analytics</strong> for what you have actually spent on freight: weekly totals (committed versus completed) and your most expensive <strong>lanes</strong> — the repeat origin → destination pairs where better pricing saves the most money.</p>`,
     target: 'page-tabs',
     on: 'bottom',
+    clickLabel: 'Spending Analytics',
   },
   {
     id: 'post-load-btn',
@@ -393,7 +401,6 @@ const COMPANY_STEPS: TourStepDef[] = [
     title: 'Step 2: route and schedule',
     text: `
       <p>Enter pickup and delivery addresses (they autocomplete, and frequently used ones can be saved as favourites), then your pickup and delivery windows.</p>
-      <p>Distance and driving time are calculated for you and shown to drivers. Realistic windows attract more bids; impossibly tight ones get ignored.</p>
     `,
     target: 'load-form-route',
     on: 'right',
@@ -437,6 +444,9 @@ const COMPANY_STEPS: TourStepDef[] = [
       <p>The auction room updates in real time: a countdown to close, a price tracker showing the creep, and the bid table with each driver's rating. Badges flag the <strong>Best</strong> bid and any bid <strong>within auto-accept</strong>.</p>
       <p>From here you can <strong>accept a bid</strong>, <strong>raise the cap</strong>, <strong>extend the deadline</strong> if nobody has bitten, or cancel and later reopen the auction. Accepting generates the Rate Confirmation and books that driver instantly.</p>
     `,
+    target: 'auction-list',
+    on: 'top',
+    clickLinkLabel: 'View Live',
   },
   {
     id: 'nav-messages',

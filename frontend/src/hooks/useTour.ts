@@ -56,7 +56,18 @@ function waitForElement(selector: string, timeout = 2500): Promise<void> {
   })
 }
 
-/** Navigate (if needed) and wait for the step's anchor before showing it. */
+/** Click a tab by its visible label inside the step's target element. */
+function clickTabInTarget(selector: string, label: string) {
+  const target = document.querySelector<HTMLElement>(selector)
+  if (!target) return
+  // Find a focusable tab whose text matches the label (button, link, or role=tab).
+  const match = Array.from(
+    target.querySelectorAll<HTMLElement>('button, a, [role="tab"]')
+  ).find((el) => el.textContent?.trim() === label)
+  match?.click()
+}
+
+/** Navigate (if needed), wait for the step's anchor, and (optionally) pre-activate a tab. */
 function prepareStep(
   navigate: (path: string) => void,
   step: TourStepDef,
@@ -68,7 +79,21 @@ function prepareStep(
       // Let React Router swap the route and the page mount its first frame.
       await delay(250)
     }
-    if (selector) await waitForElement(selector)
+    if (selector) {
+      await waitForElement(selector)
+      if (step.clickLinkLabel) {
+        // Click a link (e.g. "View Live") that navigates to another page, then
+        // let React Router swap the route and the destination page mount.
+        clickTabInTarget(selector, step.clickLinkLabel)
+        await delay(500)
+      } else if (step.clickLabel) {
+        // Pre-activate a tab (e.g. Spending Analytics) so the step's copy matches
+        // what the user is actually seeing. The click is a no-op if already active.
+        clickTabInTarget(selector, step.clickLabel)
+        // Give React a frame to re-render the tab's content before anchoring.
+        await delay(120)
+      }
+    }
     await delay(60)
   }
 }
@@ -95,7 +120,6 @@ export function createTour(role: UserRole, navigate: (path: string) => void): To
   })
 
   const nextBtn = makeButton('Next', () => tour.next())
-  const backBtn = makeButton('Back', () => tour.back(), true)
   const doneBtn = makeButton('Done', () => tour.complete())
   const skipBtn = makeButton('Skip tour', () => tour.complete(), true)
 
@@ -107,9 +131,9 @@ export function createTour(role: UserRole, navigate: (path: string) => void): To
     const isFirst = index === 0
     const isLast = index === total - 1
 
-    let buttons = [backBtn, nextBtn]
+    let buttons = [nextBtn]
     if (isFirst) buttons = [skipBtn, nextBtn]
-    else if (isLast) buttons = [backBtn, doneBtn]
+    else if (isLast) buttons = [doneBtn]
 
     tour.addStep({
       id: step.id,
