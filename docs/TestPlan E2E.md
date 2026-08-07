@@ -1,8 +1,7 @@
 # LoadLink End-to-End Test Plan
 
 > **Scope:** A single, consolidated manual test pass across the full product as it stands today, superseding the need to run the milestone-by-milestone docs (`TestPlan M2.md` … `TestPlan M5.md`) end to end. Those remain useful as a change log per milestone; this doc is the one to run for a full regression.
->
-> **Explicitly out of scope (excluded by request):** the AI Insights panel on Driver Auctions (sparkles button / `AiInsightsPanel`), and the Shepherd.js onboarding walkthrough (guided tour). Do not test these — they are being reworked separately.
+
 
 ## Prerequisites
 
